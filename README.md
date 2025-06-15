@@ -33,10 +33,13 @@
 
 
 ## Project Structure
+
+```text
 CMS/
-├── .vscode/  # Editor config (e.g., linting settings)
+├── .vscode/     # Editor config (e.g., linting settings)
 ├── CMS/         # Project settings & URLs
-├── base/                # App logic (models, views, templates)
+├── base/        # App logic (models, views, templates)
 ├── templates/
 ├── manage.py
 └── requirements.txt
+
