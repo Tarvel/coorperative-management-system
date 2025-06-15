@@ -1,2 +1,1 @@
-# coorperative-management-system
-# coorperative-management-system
+# Cooperative Management System
