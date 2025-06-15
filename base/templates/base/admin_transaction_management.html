@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+    Transaction Management
+{% endblock title %}
+
+
+{% block content %}
+    
+        <!-- Header -->
+        <header class="bg-white shadow rounded-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Transaction Management</h1>
+            <p class="text-gray-600">Approve or reject pending transactions.</p>
+        </header>
+
+        <!-- Transaction Table -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Pending Transactions</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for transaction in page_obj %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.member.name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.type|capfirst }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ transaction.amount|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.date|date:"Y-m-d" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.status|capfirst }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <form method="POST" action="{% url 'approve_transaction' transaction.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-green-600 hover:underline">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'reject_transaction' transaction.id %}" class="inline ml-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-red-600 hover:underline">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No pending transactions.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex justify-center">
+                <nav class="inline-flex rounded-md shadow">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-700">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+    Loan Application
+{% endblock title %}
+
+
+{% block content %}
+    
+        <!-- Header -->
+        <header class="bg-white shadow rounded-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Loan Application</h1>
+            <p class="text-gray-600">Apply for a loan by filling out the form below.</p>
+        </header>
+
+        <!-- Loan Application Form -->
+        <div class="bg-white shadow rounded-lg p-6 max-w-md mx-auto">
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form id="loanForm" method="POST" action="" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Loan Amount ($)</label>
+                    <input type="number" id="amount" name="amount" min="0.01" step="0.01" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="interest_rate" class="block text-sm font-medium text-gray-700">Interest Rate (%)</label>
+                    <input type="number" id="interest_rate" name="interest_rate" value="5" readonly
+                           class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 cursor-not-allowed">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">
+                    Submit Application
+                </button>
+            </form>
+        </div>
+
+{% endblock %}

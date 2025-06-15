@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+    Cooperative Report
+{% endblock title %}
+
+
+{% block content %}
+    
+        <!-- Header -->
+        <header class="bg-white shadow rounded-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Cooperative Report</h1>
+            <p class="text-gray-600">Summary of cooperative performance.</p>
+        </header>
+
+        <!-- Filter Form -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <form method="GET" action="{% url 'cooperative_report' %}" class="flex items-center space-x-4">
+                <div>
+                    <label for="year" class="block text-sm font-medium text-gray-700">Filter by Year</label>
+                    <input type="number" id="year" name="year" min="2000" max="2100" placeholder="e.g., 2025"
+                           class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="mt-6 bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">
+                    Apply Filter
+                </button>
+            </form>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Total Savings</h3>
+                <p class="text-2xl font-bold text-gray-600">${{ total_savings|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Total Loans Issued</h3>
+                <p class="text-2xl font-bold text-gray-600">${{ total_loans_issued|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Total Loans Outstanding</h3>
+                <p class="text-2xl font-bold text-gray-600">${{ total_loans_outstanding|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Total Dividends Paid</h3>
+                <p class="text-2xl font-bold text-gray-600">${{ total_dividends|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Active Members</h3>
+                <p class="text-2xl font-bold text-gray-600">{{ active_members }}</p>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Inactive Members</h3>
+                <p class="text-2xl font-bold text-gray-600">{{ inactive_members }}</p>
+            </div>
+        </div>
+
+        <!-- Savings Chart -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Total Savings Over Time</h2>
+            <canvas id="savingsChart" class="w-full h-64"></canvas>
+        </div>
+   
+
+    <script>
+        const ctx = document.getElementById('savingsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ savings_over_time_years|safe }},
+                datasets: [{
+                    label: 'Total Savings ($)',
+                    data: {{ savings_over_time_values|safe }},
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,admin_dividend_management
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Savings ($)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Year' }
+                    }
+                }
+            }
+        });
+    </script>
+
+    {% endblock %}

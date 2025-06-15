@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow rounded-lg p-4 mb-6">
+        <div class="container mx-auto flex items-center justify-between">
+            <!-- Brand/Logo -->
+            <a href="{% url 'dashboard' %}" class="text-xl font-bold text-gray-800">Cooperative</a>
+
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-blue-600">Admin Dashboard</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="text-gray-600 hover:text-blue-600">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-gray-600 hover:text-blue-600">Login</a>
+                    <a href="{% url 'register' %}" class="text-gray-600 hover:text-blue-600">Register</a>
+                {% endif %}
+
+                <!-- Notification Dropdown -->
+                {% if user.is_authenticated %}
+                    <div class="relative">
+                        <button id="notificationButton" class="text-gray-600 hover:text-blue-600 focus:outline-none">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            {% if notifications|length > 0 %}
+                                <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                    {{ notifications|length }}
+                                </span>
+                            {% endif %}
+                        </button>
+                        <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10">
+                            <div class="py-1">
+                                {% for notification in notifications %}
+                                    <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                                        {{ notification.message }}<br>
+                                        <span class="text-xs text-gray-500">{{ notification.date|date:"Y-m-d H:i" }}</span>
+                                    </div>
+                                {% empty %}
+                                    <div class="px-4 py-2 text-sm text-gray-500">No notifications</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden">
+                <button id="mobileMenuButton" class="text-gray-600 hover:text-blue-600 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white shadow rounded-lg mt-2 p-4">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="block py-2 text-gray-600 hover:text-blue-600">Dashboard</a>
+                {% if user.is_staff %}
+                    <a href="{% url 'admin_dashboard' %}" class="block py-2 text-gray-600 hover:text-blue-600">Admin Dashboard</a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="block py-2 text-gray-600 hover:text-blue-600">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="block py-2 text-gray-600 hover:text-blue-600">Login</a>
+                <a href="{% url 'register' %}" class="block py-2 text-gray-600 hover:text-blue-600">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        
+        {% if not page %}
+            
+        
+            
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <script>
+        // Toggle mobile menu
+        document.getElementById('mobileMenuButton').addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        });
+
+        // Toggle notification dropdown
+        document.getElementById('notificationButton').addEventListener('click', () => {
+            document.getElementById('notificationDropdown').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>

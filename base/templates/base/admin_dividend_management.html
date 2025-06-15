@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+    Dividend management
+{% endblock title %}
+
+
+{% block content %}
+    
+        <!-- Header -->
+        <header class="bg-white shadow rounded-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Dividend Management</h1>
+            <p class="text-gray-600">Record and view dividend payments.</p>
+        </header>
+
+        <!-- Dividend Form -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Record New Dividend</h2>
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <form method="POST" action="{% url 'record_dividend' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="year" class="block text-sm font-medium text-gray-700">Year</label>
+                    <input type="number" id="year" name="year" min="2000" max="2100" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="total_amount" class="block text-sm font-medium text-gray-700">Total Dividend Amount ($)</label>
+                    <input type="number" id="total_amount" name="total_amount" min="0.01" step="0.01" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">
+                    Distribute Dividend
+                </button>
+            </form>
+        </div>
+
+        <!-- Dividend Table -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Past Dividends</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for dividend in page_obj %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ dividend.year }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ dividend.total_amount|floatformat:2 }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ dividend.date_paid|date:"Y-m-d" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No dividends recorded.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex justify-center">
+                <nav class="inline-flex rounded-md shadow">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-700">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+
+{% block title %}
+    Member Dashboard
+{% endblock title %}
+
+
+{% block content %}
+    
+        <!-- Header -->
+        <header class="bg-white shadow rounded-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Submit Transaction</h1>
+            <p class="text-gray-600">Complete the form to request a deposit or withdrawal.</p>
+        </header>
+
+        <!-- Transaction Form -->
+        <div class="bg-white shadow rounded-lg p-6 max-w-md mx-auto">
+           
+
+            <form id="transactionForm" method="POST" action="" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="transaction_type" class="block text-sm font-medium text-gray-700">Transaction Type</label>
+                    <select id="transaction_type" name="transaction_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="deposit">Deposit</option>
+                        <option value="withdrawal">Withdrawal</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount ($)</label>
+                    <input type="number" id="amount" name="amount" min="0.01" step="0.01" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">
+                    Submit Transaction
+                </button>
+            </form>
+        </div>
+{% endblock %}
