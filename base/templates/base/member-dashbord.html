@@ -102,12 +102,21 @@
                     {% endif %}
                         
                     {% endfor %}
+
+                    {% if "yes" in pending %}
+                        <li class="text-gray-500">No recent transactions</li>
+                    {% endif %}
+                    
                         
                     
                     {% else %}
                    <li class="text-gray-500">No recent transactions</li>
                         
                     {% endif %}
+
+                    
+                    
+                        
                         
                         
                 </ul>

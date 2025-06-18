@@ -19,27 +19,37 @@
         <!-- Add Member Form -->
         <div class="bg-white shadow rounded-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Add New Member</h2>
-            <form method="POST" action="{% url 'add_member' %}" class="space-y-4">
+            <form method="POST" action="{% url 'register' %}?next={% url 'admin_management' %}" class="space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                    <input type="text" id="name" name="name" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ form.username.label }}</label>
+                    <input type="text" id="{{ form.username.id_for_label }}" name="{{ form.username.name }}" value="{{ form.username.value|default_if_none:'' }}" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 {% if form.username.errors %}border-red-500{% endif %}"
+                           placeholder="Enter username...">
+                    {% if form.username.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.username.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
+
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="email" name="email" required
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    
+                    <input type="hidden" id="{{ form.password1.id_for_label }}" name="{{ form.password1.name }}" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 {% if form.password1.errors %}border-red-500{% endif %}"
+                           placeholder="Enter password..." value="{{password}}" >
+                    {% if form.password1.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password1.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
-                    <input type="tel" id="phone" name="phone"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="initial_savings" class="block text-sm font-medium text-gray-700">Initial Savings ($)</label>
-                    <input type="number" id="initial_savings" name="initial_savings" min="0" step="0.01"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    
+                    <input type="hidden" id="{{ form.password2.id_for_label }}" name="{{ form.password2.name }}" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 {% if form.password2.errors %}border-red-500{% endif %}"
+                           placeholder="Confirm password..."  value="{{password}}">
+                    {% if form.password2.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password2.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
                 <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">
                     Add Member
@@ -67,14 +77,14 @@
                         {% for member in page_obj %}
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ member.id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ member.name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ member.user.username }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ member.email }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ member.savings_balance|floatformat:2 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ member.loan_balance|floatformat:2 }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ member.status|capfirst }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <a href="{% url 'edit_member' member.id %}" class="text-blue-600 hover:underline">Edit</a>
-                                    <a href="{% url 'view_member' member.id %}" class="ml-2 text-blue-600 hover:underline">View</a>
+                                    <a href="" class="text-blue-600 hover:underline">Edit</a>
+                                    <a href="" class="ml-2 text-blue-600 hover:underline">View</a>
                                 </td>
                             </tr>
                         {% empty %}

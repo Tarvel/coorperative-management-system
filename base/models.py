@@ -6,7 +6,7 @@ from .choices import MemberStatus, TransactionType, TransactionStatus, LoanStatu
 class Member(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     savings_balance = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.000, null=False, blank=False
+        max_digits=10, decimal_places=2, default=0.000, null=False, blank=False, verbose_name="Initial Savings Balance"
     )
     loan_balance = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.000, null=False, blank=False

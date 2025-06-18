@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Member Details - {{ member.name }}
+{% endblock title %}
+
+{% block content %}
+    <!-- Header -->
+    <header class="bg-white shadow rounded-lg p-6 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Member Details: {{ member.name }}</h1>
+        <p class="text-gray-600">Manage member information, transactions, and loans.</p>
+    </header>
+
+    <!-- Member Information -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Member Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p><span class="font-medium">ID:</span> {{ member.id }}</p>
+                <p><span class="font-medium">Name:</span> {{ member.name }}</p>
+                <p><span class="font-medium">Email:</span> {{ member.email }}</p>
+            </div>
+            <div>
+                <p><span class="font-medium">Phone:</span> {{ member.phone|default:"N/A" }}</p>
+                <p><span class="font-medium">Savings Balance:</span> ${{ member.savings_balance|floatformat:2 }}</p>
+                <p><span class="font-medium">Loan Balance:</span> ${{ member.loan_balance|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <!-- Status Management -->
+        <div class="mt-4">
+            <p><span class="font-medium">Status:</span> {{ member.status|capfirst }}</p>
+            <form method="POST" action="" class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="bg-{% if member.status == 'active' %}red{% else %}green{% endif %}-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-{% if member.status == 'active' %}red{% else %}green{% endif %}-700">
+                    {% if member.status == 'active' %}Deactivate{% else %}Activate{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pending Transactions -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Pending Transactions</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaction in pending_transactions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.type|capfirst }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ transaction.amount|floatformat:2 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.date|date:"Y-m-d" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <form method="POST" action="{% url 'approve_transaction' transaction.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-green-600 hover:underline">Approve</button>
+                                </form>
+                                <form method="POST" action="{% url 'reject_transaction' transaction.id %}" class="inline ml-2">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 hover:underline">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No pending transactions.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Loans -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Loans</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Issued</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for loan in loans %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ loan.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ loan.amount|floatformat:2 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ loan.status|capfirst }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ loan.date_issued|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ loan.balance_remaining|floatformat:2 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                {% if loan.status == 'applied' %}
+                                    <form method="POST" action="{% url 'approve_loan' loan.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-green-600 hover:underline">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'reject_loan' loan.id %}" class="inline ml-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-red-600 hover:underline">Reject</button>
+                                    </form>
+                                {% elif loan.status == 'active' %}
+                                    <form method="POST" action="{% url 'record_repayment' loan.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <input type="number" name="repayment_amount" min="0.01" step="0.01" required
+                                               class="w-20 border-gray-300 rounded-md" placeholder="Amount">
+                                        <button type="submit" class="text-blue-600 hover:underline ml-2">Repay</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No loans found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Transactions</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for transaction in recent_transactions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.date|date:"Y-m-d" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.type|capfirst }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ transaction.amount|floatformat:2 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.status|capfirst }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No recent transactions.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if recent_transactions_paginator.num_pages > 1 %}
+            <div class="mt-6 flex justify-center">
+                <nav class="inline-flex rounded-md shadow">
+                    {% if recent_transactions.has_previous %}
+                        <a href="?transactions_page={{ recent_transactions.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-700">
+                        Page {{ recent_transactions.number }} of {{ recent_transactions_paginator.num_pages }}
+                    </span>
+                    {% if recent_transactions.has_next %}
+                        <a href="?transactions_page={{ recent_transactions.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Dividends -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Dividends</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Paid</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for dividend in recent_dividends %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ dividend.year }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ dividend.amount|floatformat:2 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ dividend.date_paid|date:"Y-m-d" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No recent dividends.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if recent_dividends_paginator.num_pages > 1 %}
+            <div class="mt-6 flex justify-center">
+                <nav class="inline-flex rounded-md shadow">
+                    {% if recent_dividends.has_previous %}
+                        <a href="?dividends_page={{ recent_dividends.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-gray-700">
+                        Page {{ recent_dividends.number }} of {{ recent_dividends_paginator.num_pages }}
+                    </span>
+                    {% if recent_dividends.has_next %}
+                        <a href="?dividends_page={{ recent_dividends.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="mt-6">
+        <a href="{% url 'admin_management' %}" class="text-blue-600 hover:underline">Back to Member Management</a>
+    </div>
+{% endblock %}

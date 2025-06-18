@@ -12,6 +12,14 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class TransactionForm(ModelForm):
+
     class Meta:
         model = Transaction
         fields = ["amount", "type"]
+
+
+class MemberForm(ModelForm):
+
+    class Meta:
+        model = Member
+        fields = ["savings_balance"]

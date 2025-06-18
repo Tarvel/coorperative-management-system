@@ -44,6 +44,7 @@
                     </button>
                 </form>
             {% else %}
+            
                <form method="POST" action="{% url 'register' %}" class="space-y-4">
                 {% csrf_token %}
                 <div>

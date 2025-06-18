@@ -1,11 +1,11 @@
 from decimal import Decimal
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import Member, User, Dividend, Transaction, Loan
 from .forms import UserCreationForm, TransactionForm, CustomUserCreationForm
 
@@ -21,7 +21,10 @@ def registerPage(request):
             user.save()
             login(request, user)
             member, created = Member.objects.get_or_create(user=request.user)
-            return redirect("dashboard")
+            next_url = request.GET.get("next") or "dashboard"
+            if next_url == "admin_management":
+                messages.info(request, f"{user.username} has been added")
+            return redirect(next_url)
 
     context = {"page": page, "form": form}
     return render(request, "base/login.html", context)
@@ -30,16 +33,18 @@ def registerPage(request):
 def adminRegisterPage(request):
     page = "register"
     form = CustomUserCreationForm()
+
     if request.method == "POST":
-        form = CustomUserCreationForm(request.POST, Member)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.username.lower()
             user.save()
-            member, created = Member.objects.get_or_create(user=request.user)
-            login(request, user)
+            member, created = Member.objects.get_or_create(user=user)
 
+            login(request, user)
             return redirect("dashboard")
+
     context = {"page": page, "form": form}
     return render(request, "base/login.html", context)
 
@@ -61,9 +66,10 @@ def loginPage(request):
 
         if user is not None:
             login(request, user)
-            return redirect("dashboard")
+            next_url = request.GET.get("next") or "dashboard"
+            return redirect(next_url)
         else:
-            messages.error(request, "Incorrect passowrd")
+            messages.error(request, "Incorrect password")
             return redirect("login")
 
     context = {"page": page}
@@ -83,7 +89,14 @@ def memberDashboard(request):
     dividends = Dividend.objects.filter(member=member).all()[0:4]
     transactions = Transaction.objects.filter(member=member).all()[0:4]
 
-    context = {"member": member, "dividends": dividends, "transactions": transactions}
+    pending = ["yes" if "pending" in status.status else "no" for status in transactions]
+
+    context = {
+        "member": member,
+        "dividends": dividends,
+        "transactions": transactions,
+        "pending": pending,
+    }
     return render(request, "base/member-dashbord.html", context)
 
 
@@ -154,8 +167,29 @@ def makeTransaction(request):
 
 @login_required(login_url="login")
 def transactionHistory(request):
+    selected_type = request.GET.get("type") if request.GET.get("type") != None else ""
+    selected_status = (
+        request.GET.get("status") if request.GET.get("status") != None else ""
+    )
+    selected_date = request.GET.get("date") if request.GET.get("date") != None else ""
+
     member = Member.objects.filter(user=request.user).first()
-    transaction_list = Transaction.objects.filter(member=member).order_by("-date")
+    transaction = member.transaction_set.all()
+    print(
+        f"get type: {selected_type}, get status: {selected_status}, get date:{selected_date}"
+    )
+    filters = Q()
+
+    if selected_type != "all" and selected_type.strip():
+        filters &= Q(type__iexact=selected_type)
+
+    if selected_status != "all" and selected_status.strip():
+        filters &= Q(status__iexact=selected_status)
+
+    if selected_date.strip():
+        filters &= Q(date__date=selected_date)
+
+    transaction_list = transaction.filter(filters).order_by("-date")
 
     paginator = Paginator(transaction_list, 3)
     page_number = request.GET.get("page")
@@ -228,3 +262,19 @@ def adminDashboard(request):
         "pending_loans": pending_loans,
     }
     return render(request, "base/admin-dashboard.html", context)
+
+
+@staff_member_required
+def adminManagement(request):
+    form = UserCreationForm()
+    members = Member.objects.all().order_by("-created_at")
+    paginator = Paginator(members, 4)
+    page_number = request.GET.get("page")
+    page_obg = paginator.get_page(page_number)
+    password = "default_password"
+    context = {
+        "password": password,
+        "form": form,
+        "page_obj": page_obg,
+    }
+    return render(request, "base/admin_member_management.html", context)

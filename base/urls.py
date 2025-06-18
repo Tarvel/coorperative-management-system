@@ -15,4 +15,5 @@ urlpatterns = [
     # Admin
     path("admin-register/", views.adminRegisterPage, name="admin-register"),
     path("admin-dashboard/", views.adminDashboard, name="admin_dashboard"),
+    path("admin-management/", views.adminManagement, name="admin_management"),
 ]
