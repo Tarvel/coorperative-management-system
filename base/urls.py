@@ -10,10 +10,15 @@ urlpatterns = [
     path("transaction/", views.makeTransaction, name="transaction"),
     path("transaction-history/", views.transactionHistory, name="transaction-history"),
 
-    path("loan-application/", views.loadApplication, name="loan-application"),
+    path("loan-application/", views.loanApplication, name="loan-application"),
+
+    # Notification
+    path("clear_notifications/", views.clear_notifications, name="clear_notifications"),
+    path("mark_notification_read/<str:pk>", views.mark_notification_read, name="mark_notification_read"),
 
     # Admin
-    path("admin-register/", views.adminRegisterPage, name="admin-register"),
+    path("admin-register/", views.adminRegisterPage, name="admin_register"),
+    path("admin-login/", views.adminLoginPage, name="admin_login"),
     path("admin-dashboard/", views.adminDashboard, name="admin_dashboard"),
     path("admin-management/", views.adminManagement, name="admin_management"),
     path("view-member/<str:username>", views.viewMember, name="view_member"),

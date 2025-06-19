@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import User
 from .choices import MemberStatus, TransactionType, TransactionStatus, LoanStatus
 
@@ -8,13 +9,13 @@ class Member(models.Model):
     savings_balance = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0.000,
+        default=0.00,
         null=False,
         blank=False,
         verbose_name="Initial Savings Balance",
     )
     loan_balance = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.000, null=False, blank=False
+        max_digits=10, decimal_places=2, default=0.00, null=False, blank=False
     )
     status = models.CharField(
         max_length=20,
@@ -30,7 +31,7 @@ class Member(models.Model):
 class Transaction(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, null=False)
     amount = models.DecimalField(
-        max_digits=100000, decimal_places=3, default=0.000, null=False, blank=False
+        max_digits=100000, decimal_places=3, default=0.00, null=False, blank=False
     )
     type = models.CharField(
         max_length=10,
@@ -49,14 +50,14 @@ class Transaction(models.Model):
 
 class Loan(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.000)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
     status = models.CharField(
         max_length=10, choices=LoanStatus.choices, default=LoanStatus.APPLIED
     )
     date_issued = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     balance_remaining = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.000
+        max_digits=10, decimal_places=2, default=0.00
     )
 
     def save(self, *args, **kwargs):
@@ -70,7 +71,7 @@ class Loan(models.Model):
 
 class Dividend(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, default=0.000, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, default=0.00, decimal_places=2)
     year = models.IntegerField()
     date_paid = models.DateTimeField(auto_now_add=True)
 
@@ -79,3 +80,13 @@ class Dividend(models.Model):
 
     def __str__(self):
         return f"Dividend {self.year} - {self.member} - {self.amount}"
+
+class Notification(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name="notifications")
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.title} - {self.member}"

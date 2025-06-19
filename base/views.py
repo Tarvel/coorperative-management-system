@@ -6,9 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Member, User, Dividend, Transaction, Loan
+from .models import Member, User, Dividend, Transaction, Loan, Notification
 from .forms import UserCreationForm, TransactionForm, CustomUserCreationForm, MemberForm
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
 
 
 def registerPage(request):
@@ -33,6 +34,7 @@ def registerPage(request):
 
 def adminRegisterPage(request):
     page = "register"
+    is_admin = True
     form = CustomUserCreationForm()
 
     if request.method == "POST":
@@ -41,12 +43,44 @@ def adminRegisterPage(request):
             user = form.save(commit=False)
             user.username = user.username.lower()
             user.save()
-            member, created = Member.objects.get_or_create(user=user)
+            # member, created = Member.objects.get_or_create(user=user)
 
             login(request, user)
             return redirect("dashboard")
 
-    context = {"page": page, "form": form}
+    context = {"page": page, "form": form, "is_admin": is_admin}
+    return render(request, "base/login.html", context)
+
+
+def adminLoginPage(request):
+    page = "login"
+    is_admin = True
+    if request.method == "POST":
+        username = request.POST.get("username")
+        username = username.lower()
+        password = request.POST.get("password")
+
+        try:
+            check_user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            messages.error(request, "Username is not registered")
+            return redirect("admin_login")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if check_user.is_staff:
+                login(request, user)
+                next_url = request.GET.get("next") or "admin_dashboard"
+                return redirect(next_url)
+            else:
+                messages.error(request, "You are not an admin use the member login")
+        else:
+            messages.error(request, "Incorrect password")
+            return redirect("admin_login")
+
+    context = {"page": page, "is_admin": is_admin}
+
     return render(request, "base/login.html", context)
 
 
@@ -88,7 +122,9 @@ def memberDashboard(request):
     user = User.objects.get(username=request.user.username)
     member = Member.objects.filter(user=user).first()
     dividends = Dividend.objects.filter(member=member).all()[0:4]
-    transactions = Transaction.objects.filter(member=member).all()[0:4]
+    transactions = (
+        Transaction.objects.filter(member=member).all().order_by("-date")[0:4]
+    )
 
     pending = ["yes" if "pending" in status.status else "no" for status in transactions]
 
@@ -201,7 +237,7 @@ def transactionHistory(request):
 
 
 @login_required(login_url="login")
-def loadApplication(request):
+def loanApplication(request):
     member = Member.objects.filter(user=request.user).first()
     if member.status == "active":
         if member.loan_balance > 0:
@@ -236,6 +272,28 @@ def loadApplication(request):
         return redirect("dashboard")
 
     return render(request, "base/loan_application_form.html")
+
+
+# NOTIFICATION
+
+
+def clear_notifications(request):
+    member = Member.objects.filter(user__username=request.user.username).first()
+    if request.method == "POST":
+        print(request.POST)
+        Notification.objects.filter(member=member).delete()
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+def mark_notification_read(request, pk):
+    notification = Notification.objects.get(id=pk)
+    if request.method == "POST":
+        notification.is_read = True
+        notification.save()
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+#  ADMIN
 
 
 @staff_member_required
@@ -318,6 +376,7 @@ def viewMember(request, username):
         else:
             member.status = "active"
             member.save()
+        messages.info(request, f"Member is now {member.status}")
         return redirect("view_member", username=member.user.username)
     context = {
         "member": member,
@@ -343,12 +402,22 @@ def approve_transaction(request, username, pk):
             transaction.status = "completed"
             member.save()
             transaction.save()
+            Notification.objects.create(
+                member=member,
+                title="Transaction Approved",
+                body=f"Your {transaction.type} request of ${transaction.amount} has been approved.",
+            )
         else:
             new_savings_balance = member.savings_balance - transaction.amount
             member.savings_balance = new_savings_balance
             transaction.status = "completed"
             member.save()
             transaction.save()
+            Notification.objects.create(
+                member=member,
+                title="Transaction Approved",
+                body=f"Your {transaction.type} request of ${transaction.amount} has been approved.",
+            )
 
     return redirect("view_member", username=username)
 
@@ -363,6 +432,10 @@ def reject_transaction(request, username, pk):
 
     if request.method == "POST":
         transaction.delete()
+        Notification.objects.create(
+            member=member,
+            title="Transaction Rejected",
+            body=f"Your {transaction.type} request of ${transaction.amount} has been rejected. Please contact support for more information.",
+        )
         return redirect("view_member", username=username)
     return render(request, "base/confirm_reject.html", {"transaction": transaction})
-

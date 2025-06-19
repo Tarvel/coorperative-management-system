@@ -10,7 +10,7 @@
 <!-- Header -->
         
 <header class="bg-white shadow rounded-lg p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">{% if page == "login" %}Login{% else %}Register{% endif %}</h1>
+            <h1 class="text-2xl font-bold text-gray-800">{% if page == "login" %} {% if is_admin %}Admin {% endif %}Login{% else %}{% if is_admin %}Admin {% endif %}Register{% endif %}</h1>
             <p class="text-gray-600">{% if page == "login" %}Sign in to your account.{% else %}Create a new account.{% endif %}</p>
         </header>
 
@@ -27,7 +27,7 @@
             {% endif %}
 
             {% if page == "login" %}
-                <form method="POST" action="{% url 'login' %}" class="space-y-4">
+                <form method="POST" action="" class="space-y-4">
                     {% csrf_token %}
                     <div>
                         <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
