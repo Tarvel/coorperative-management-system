@@ -7,14 +7,15 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import Member, User, Dividend, Transaction, Loan
-from .forms import UserCreationForm, TransactionForm, CustomUserCreationForm
+from .forms import UserCreationForm, TransactionForm, CustomUserCreationForm, MemberForm
+from django.shortcuts import redirect, get_object_or_404
 
 
 def registerPage(request):
     page = "register"
     form = UserCreationForm()
     if request.method == "POST":
-        form = UserCreationForm(request.POST, Member)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.username.lower()
@@ -266,15 +267,102 @@ def adminDashboard(request):
 
 @staff_member_required
 def adminManagement(request):
-    form = UserCreationForm()
     members = Member.objects.all().order_by("-created_at")
     paginator = Paginator(members, 4)
     page_number = request.GET.get("page")
-    page_obg = paginator.get_page(page_number)
+    page_obj = paginator.get_page(page_number)
     password = "default_password"
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.username = user.username.lower()
+            user.save()
+            member, created = Member.objects.get_or_create(user=user)
+            messages.info(request, f"{user.username} has been added")
+            return redirect("adminManagement")
+    else:
+        form = UserCreationForm()
+
     context = {
         "password": password,
         "form": form,
-        "page_obj": page_obg,
+        "page_obj": page_obj,
     }
     return render(request, "base/admin_member_management.html", context)
+
+
+@staff_member_required
+def viewMember(request, username):
+    member = Member.objects.get(user__username=username)
+
+    try:
+        transactions = member.transaction_set.all()
+    except Transaction.DoesNotExist:
+        transactions = False
+
+    try:
+        loan = Loan.objects.get(member=member)
+    except Loan.DoesNotExist:
+        loan = False
+
+    pending_transactions = [
+        transaction for transaction in transactions if transaction.status == "pending"
+    ]
+
+    if request.method == "POST":
+        if member.status == "active":
+            member.status = "inactive"
+            member.save()
+        else:
+            member.status = "active"
+            member.save()
+        return redirect("view_member", username=member.user.username)
+    context = {
+        "member": member,
+        "pending_transactions": pending_transactions,
+        "loan": loan,
+    }
+    return render(request, "base/view_member.html", context)
+
+
+def approve_transaction(request, username, pk):
+    member = Member.objects.get(user__username=username)
+
+    try:
+        transaction = member.transaction_set.get(id=pk)
+    except Transaction.DoesNotExist:
+        transaction = None
+        return redirect("view_member", username=username)
+
+    if request.method == "POST":
+        if transaction.type == "deposit":
+            new_savings_balance = member.savings_balance + transaction.amount
+            member.savings_balance = new_savings_balance
+            transaction.status = "completed"
+            member.save()
+            transaction.save()
+        else:
+            new_savings_balance = member.savings_balance - transaction.amount
+            member.savings_balance = new_savings_balance
+            transaction.status = "completed"
+            member.save()
+            transaction.save()
+
+    return redirect("view_member", username=username)
+
+
+def reject_transaction(request, username, pk):
+    member = get_object_or_404(Member, user__username=username)
+
+    try:
+        transaction = member.transaction_set.get(id=pk)
+    except Transaction.DoesNotExist:
+        return redirect("view_member", username=username)
+
+    if request.method == "POST":
+        transaction.delete()
+        return redirect("view_member", username=username)
+    return render(request, "base/confirm_reject.html", {"transaction": transaction})
+

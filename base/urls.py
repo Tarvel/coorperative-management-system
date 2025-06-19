@@ -16,4 +16,7 @@ urlpatterns = [
     path("admin-register/", views.adminRegisterPage, name="admin-register"),
     path("admin-dashboard/", views.adminDashboard, name="admin_dashboard"),
     path("admin-management/", views.adminManagement, name="admin_management"),
+    path("view-member/<str:username>", views.viewMember, name="view_member"),
+    path("approve_transaction/<str:username>/<str:pk>", views.approve_transaction, name="approve_transaction"),
+    path("reject_transaction/<str:username>/<str:pk>", views.reject_transaction, name="reject_transaction"),
 ]

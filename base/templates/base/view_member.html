@@ -1,15 +1,43 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Member Details - {{ member.name }}
+    Member Details - {{ member.user.username }}
 {% endblock title %}
 
 {% block content %}
+
+                        <!-- Delete Confirmation Modal -->
+   
+                                <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Confirm Rejection</h3>
+            <p class="text-sm text-gray-600 mb-6">Are you sure you want to reject this item? This action cannot be undone.</p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2">Cancel</button>
+                <form id="modal-form" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Reject</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(actionUrl) {
+            document.getElementById('modal-form').action = actionUrl;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+    </script>
+
     <!-- Header -->
     <header class="bg-white shadow rounded-lg p-6 mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Member Details: {{ member.name }}</h1>
         <p class="text-gray-600">Manage member information, transactions, and loans.</p>
     </header>
+
 
     <!-- Member Information -->
     <div class="bg-white shadow rounded-lg p-6 mb-6">
@@ -56,19 +84,19 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for transaction in pending_transactions %}
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ forloop.counter }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.type|capfirst }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ transaction.amount|floatformat:2 }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ transaction.date|date:"Y-m-d" }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <form method="POST" action="{% url 'approve_transaction' transaction.id %}" class="inline">
+                                <form method="POST" action="{% url 'approve_transaction' member.user.username transaction.id %}" class="inline">
                                     {% csrf_token %}
-                                    <button type="submit" class="text-green-600 hover:underline">Approve</button>
+                                    <button type="submit" class="bg-green-600 hover:bg-red-700 text-white px-4 py-2 rounded">Approve</button>
                                 </form>
-                                <form method="POST" action="{% url 'reject_transaction' transaction.id %}" class="inline ml-2">
-                                    {% csrf_token %}
-                                    <button type="submit" class="text-red-600 hover:underline">Reject</button>
-                                </form>
+                            
+                                    <button onclick="openModal('{% url 'reject_transaction' member.user.username transaction.id %}')"class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Reject</button>
+
+        
                             </td>
                         </tr>
                     {% empty %}
@@ -99,7 +127,7 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for loan in loans %}
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ loan.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ forloop.counter }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${{ loan.amount|floatformat:2 }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ loan.status|capfirst }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ loan.date_issued|date:"Y-m-d"|default:"N/A" }}</td>

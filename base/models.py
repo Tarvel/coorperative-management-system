@@ -6,7 +6,12 @@ from .choices import MemberStatus, TransactionType, TransactionStatus, LoanStatu
 class Member(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     savings_balance = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.000, null=False, blank=False, verbose_name="Initial Savings Balance"
+        max_digits=10,
+        decimal_places=2,
+        default=0.000,
+        null=False,
+        blank=False,
+        verbose_name="Initial Savings Balance",
     )
     loan_balance = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.000, null=False, blank=False
@@ -44,13 +49,15 @@ class Transaction(models.Model):
 
 class Loan(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.000)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
     status = models.CharField(
         max_length=10, choices=LoanStatus.choices, default=LoanStatus.APPLIED
     )
     date_issued = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    balance_remaining = models.DecimalField(max_digits=10, decimal_places=2)
+    balance_remaining = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.000
+    )
 
     def save(self, *args, **kwargs):
         if self._state.adding and self.balance_remaining is None:
