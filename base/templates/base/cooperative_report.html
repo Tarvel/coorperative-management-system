@@ -57,6 +57,47 @@
         </div>
 
         <!-- Savings Chart -->
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Total Savings Over Time</h2>
+    <canvas id="savingsChart" class="w-full h-64"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('savingsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+                label: 'Total Savings ($)',
+                data: [1500, 3200, 4800, 7000, 9500, 12000, 15500],
+                borderColor: 'rgba(59, 130, 246, 1)',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Savings ($)' }
+                },
+                x: {
+                    title: { display: true, text: 'Year' }
+                }
+            }
+        }
+    });
+</script>
+
+
+    {% endblock %}
+
+
+    <!-- Savings Chart -->
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Total Savings Over Time</h2>
             <canvas id="savingsChart" class="w-full h-64"></canvas>
@@ -92,5 +133,3 @@
             }
         });
     </script>
-
-    {% endblock %}

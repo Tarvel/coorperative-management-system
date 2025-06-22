@@ -24,4 +24,6 @@ urlpatterns = [
     path("view-member/<str:username>", views.viewMember, name="view_member"),
     path("approve_transaction/<str:username>/<str:pk>", views.approve_transaction, name="approve_transaction"),
     path("reject_transaction/<str:username>/<str:pk>", views.reject_transaction, name="reject_transaction"),
+    path("manage-transactions", views.transactionManagement, name="admin_transaction_management"),
+    path("cooperative_report/", views.coorperativeReport, name="cooperative_report"),
 ]

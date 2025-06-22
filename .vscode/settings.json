@@ -10,12 +10,10 @@
 
   "editor.formatOnSave": true,
 
+"files.maxMemoryForLargeFilesMB": 8192,
 
 
-  "[django-html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
-  },
+ 
 
   "files.associations": {
     "*.html": "django-html"

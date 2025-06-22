@@ -1,125 +1,94 @@
-{% extends "layout.html" %}
-
+{% extends 'layout.html' %}
 
 {% block title %}
-    Member Dashboard
-{% endblock title %}
-
+  Member Dashboard
+{% endblock %}
 
 {% block content %}
-    
+  <!-- Header -->
+  <header class="bg-white shadow rounded-lg p-6 mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Member Dashboard</h1>
 
-        
-        <!-- Header -->
-        <header class="bg-white shadow rounded-lg p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Member Dashboard</h1>
-            
-         
-          
-                
-            <p class="text-gray-600">Membership Status: <span class="font-semibold">{{member.status}}</span></p>
-        </header>
+    <p class="text-gray-600">
+      Membership Status: <span class="font-semibold">{{ member.status }}</span>
+    </p>
+  </header>
 
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Account Summary -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Account Summary</h2>
-                <div class="space-y-2">
-                    <p><span class="font-medium">Savings Balance:</span> ${{member.savings_balance}}</p>
-                    <p><span class="font-medium">Total Loan Balance:</span> ${{member.loan_balance}}</p>
-                    <p><span class="font-medium">Withdrawal Eligibility:</span> 
-                        
-                        {% if member.savings_balance >= 10 %}
+  <!-- Main Content -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Account Summary -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Account Summary</h2>
+      <div class="space-y-2">
+        <p>
+          <span class="font-medium">Savings Balance:</span> ${{ member.savings_balance }}
+        </p>
+        <p>
+          <span class="font-medium">Total Loan Balance:</span> ${{ member.loan_balance }}
+        </p>
+        <p>
+          <span class="font-medium">Withdrawal Eligibility:</span>
 
-                        <span class="text-green-600">
-                            Eligible
-                        </span>
-                        {% else %}
-                        <span class="text-red-600">
-                           Not Eligible
-                        </span>
-                        {% endif %}
-                            
-                    </p>
-                </div>
-            </div>
+          {% if member.savings_balance >= 10 %}
+            <span class="text-green-600">Eligible</span>
+          {% else %}
+            <span class="text-red-600">Not Eligible</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
 
-                  
-   
+    <!-- Navigation Links -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="{% url 'transaction' %}" class="text-blue-600 hover:underline">Deposit/Withdrawal Form</a>
+        </li>
+        <li>
+          <a href="{% url 'loan-application' %}" class="text-blue-600 hover:underline">Loan Application</a>
+        </li>
+        <li>
+          <a href="{% url 'transaction-history' %}" class="text-blue-600 hover:underline">Transaction History</a>
+        </li>
+        <li>
+          <a href="/dividend-history" class="text-blue-600 hover:underline">Dividend History</a>
+        </li>
+      </ul>
+    </div>
 
-            <!-- Navigation Links -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-                <ul class="space-y-2">
-                    <li><a href="{% url 'transaction' %}" class="text-blue-600 hover:underline">Deposit/Withdrawal Form</a></li>
-                    <li><a href="{% url 'loan-application' %}" class="text-blue-600 hover:underline">Loan Application</a></li>
-                    <li><a href="{% url 'transaction-history' %}" class="text-blue-600 hover:underline">Transaction History</a></li>
-                    <li><a href="/dividend-history" class="text-blue-600 hover:underline">Dividend History</a></li>
-                </ul>
-            </div>
+    <!-- Recent Dividends -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Dividends</h2>
+      <ul class="space-y-2">
+        {% if dividends %}
+          {% for dividend in dividends %}
+            <li class="text-gray-600">${{ dividend.amount }} - {{ dividend.date_paid|timesince }} ago</li>
+          {% endfor %}
+        {% else %}
+          <li class="text-gray-500">No recent dividends</li>
+        {% endif %}
+      </ul>
+    </div>
 
-            <!-- Recent Dividends -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Dividends</h2>
-                <ul class="space-y-2">
-                    
-                    {% if dividends %}
-                        
-                    
-                    {% for dividend in dividends %}
-                        
-                        <li class="text-gray-600">
-                            ${{dividend.amount}} - {{dividend.date_paid|timesince}} ago
-                        </li>
-                        
-                        {% endfor %}
+    <!-- Recent Transactions -->
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Transactions</h2>
+      <ul class="space-y-2">
+        {% if transactions %}
+          {% for transaction in transactions %}
+            {% if transaction.status == 'completed' %}
+              <li class="text-gray-600">[{{ transaction.type }}] ${{ transaction.amount }} - {{ transaction.date|timesince }} ago</li>
+            {% endif %}
+          {% endfor %}
 
-                        {% else %}
-                        <li class="text-gray-500">No recent dividends</li>
-
-                        {% endif %}
-                </ul>
-            </div>
-
-            <!-- Recent Transactions -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Transactions</h2>
-                <ul class="space-y-2">
-                    
-                    {% if transactions %}
-                    
-                    
-                    {% for transaction in transactions  %}
-
-                    
-                    {% if transaction.status == "completed" %}
-
-                    <li class="text-gray-600">
-                        [{{transaction.type}}] ${{transaction.amount}} - {{transaction.date|timesince}} ago
-                    </li>
-
-                    {% endif %}
-                        
-                    {% endfor %}
-
-                    {% if "yes" in pending %}
-                        <li class="text-gray-500">No recent transactions</li>
-                    {% endif %}
-                    
-                        
-                    
-                    {% else %}
-                   <li class="text-gray-500">No recent transactions</li>
-                        
-                    {% endif %}
-
-                    
-                    
-                        
-                        
-                        
-                </ul>
-            </div>
-        </div>
+          {% if 'yes' in pending %}
+            <li class="text-gray-500">No recent transactions</li>
+          {% endif %}
+        {% else %}
+          <li class="text-gray-500">No recent transactions</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
 {% endblock %}

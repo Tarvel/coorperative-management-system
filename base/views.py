@@ -143,60 +143,48 @@ def makeTransaction(request):
     member = Member.objects.filter(user=request.user).first()
 
     if request.method == "POST":
+        admin_users = Member.objects.filter(user__is_staff=True)
         amount = request.POST.get("amount")
         amount = Decimal(amount)
         transaction_type = request.POST.get("transaction_type")
-        if member.loan_balance <= 0.00:
-            if transaction_type == "withdrawal":
-                if member.savings_balance >= 10:
-                    transaction = Transaction.objects.create(
-                        member=member,
-                        amount=amount,
-                        type=transaction_type,
-                    )
-                    messages.info(
-                        request,
-                        f"Your {transaction_type} in now pending, please wait while the admin approves it",
-                    )
-                    return redirect("dashboard")
-                else:
-                    messages.error(
-                        request,
-                        f"Your {transaction_type} cannot be processed due to insufficient balance",
-                    )
-                    return redirect("dashboard")
 
-            else:
-                transaction = Transaction.objects.create(
-                    member=member,
-                    amount=amount,
-                    type=transaction_type,
-                )
-                messages.info(
-                    request,
-                    f"Your {transaction_type} in now pending, please wait while the admin approves it",
-                )
-                return redirect("dashboard")
-
-        else:
-            if member.savings_balance >= 10 and transaction_type == "deposit":
-                transaction = Transaction.objects.create(
-                    member=member,
-                    amount=amount,
-                    type=transaction_type,
-                )
-                messages.info(
-                    request,
-                    f"Your {transaction_type} in now pending, please wait while the admin approves it",
-                )
-                return redirect("dashboard")
-
-            else:
-                messages.error(
-                    request,
-                    f"Your {transaction_type} cannot be processed due to unpaid loan",
-                )
+        if member.loan_balance > 0 and transaction_type == "withdrawal":
+            messages.error(
+                request,
+                f"Your {transaction_type} cannot be processed due to unpaid loan",
+            )
             return redirect("dashboard")
+
+        if transaction_type == "withdrawal" and member.savings_balance < 10:
+            messages.error(
+                request,
+                f"Your {transaction_type} cannot be processed due to insufficient balance",
+            )
+            return redirect("dashboard")
+
+        if transaction_type == "withdrawal" and amount > member.savings_balance:
+            messages.error(
+                request,
+                f"Your {transaction_type} cannot be processed due to insufficient balance",
+            )
+            return redirect("dashboard")
+
+        transaction = Transaction.objects.create(
+            member=member,
+            amount=amount,
+            type=transaction_type,
+        )
+        messages.info(
+            request,
+            f"Your {transaction_type} in now pending, please wait while the admin approves it",
+        )
+        for admin in admin_users:
+            Notification.objects.create(
+                member=admin,
+                title="Pending Transaction",
+                body=f"{member.user.username} made a {transaction_type} of ${amount}",
+            )
+        return redirect("dashboard")
 
     context = {"form": form}
     return render(request, "base/transaction_form.html", context)
@@ -228,7 +216,7 @@ def transactionHistory(request):
 
     transaction_list = transaction.filter(filters).order_by("-date")
 
-    paginator = Paginator(transaction_list, 3)
+    paginator = Paginator(transaction_list, 4)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
@@ -280,7 +268,6 @@ def loanApplication(request):
 def clear_notifications(request):
     member = Member.objects.filter(user__username=request.user.username).first()
     if request.method == "POST":
-        print(request.POST)
         Notification.objects.filter(member=member).delete()
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -398,7 +385,7 @@ def approve_transaction(request, username, pk):
     if request.method == "POST":
         if transaction.type == "deposit":
             new_savings_balance = member.savings_balance + transaction.amount
-            member.savings_balance = new_savings_balance
+            member.savings_balance = Decimal(new_savings_balance)
             transaction.status = "completed"
             member.save()
             transaction.save()
@@ -409,7 +396,7 @@ def approve_transaction(request, username, pk):
             )
         else:
             new_savings_balance = member.savings_balance - transaction.amount
-            member.savings_balance = new_savings_balance
+            member.savings_balance = Decimal(new_savings_balance)
             transaction.status = "completed"
             member.save()
             transaction.save()
@@ -419,7 +406,7 @@ def approve_transaction(request, username, pk):
                 body=f"Your {transaction.type} request of ${transaction.amount} has been approved.",
             )
 
-    return redirect("view_member", username=username)
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 def reject_transaction(request, username, pk):
@@ -437,5 +424,46 @@ def reject_transaction(request, username, pk):
             title="Transaction Rejected",
             body=f"Your {transaction.type} request of ${transaction.amount} has been rejected. Please contact support for more information.",
         )
-        return redirect("view_member", username=username)
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
     return render(request, "base/confirm_reject.html", {"transaction": transaction})
+
+
+def transactionManagement(request):
+    transactions = Transaction.objects.filter(status="pending").order_by("-date")
+    pending_transactions = sum(
+        1 for transaction in transactions if transaction.status == "pending"
+    )
+    paginator = Paginator(transactions, 5)
+
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    context = {"page_obj": page_obj}
+
+    return render(request, "base/admin_transaction_management.html", context)
+
+
+def coorperativeReport(request):
+    members = Member.objects.all()
+    transactions = Transaction.objects.all()
+    loans = Loan.objects.all()
+    active_members = Member.objects.filter(status="active").count()
+    inactive_members = Member.objects.filter(status="inactive").count()
+
+    total_savings = sum(Decimal(member.savings_balance) for member in members)
+    total_loans_outstanding = sum(Decimal(member.loan_balance) for member in members)
+    pending_transactions = sum(
+        1 for transaction in transactions if transaction.status == "pending"
+    )
+    pending_loans = sum(1 for loan in transactions if loan.status == "applied")
+
+    context = {
+        "members": members,
+        "total_savings": total_savings,
+        "total_loans_outstanding": total_loans_outstanding,
+        "pending_transactions": pending_transactions,
+        "pending_loans": pending_loans,
+        "active_members": active_members,
+        "inactive_members": inactive_members,
+        "savings_over_time_years": 30,
+    }
+    return render(request, "base/cooperative_report.html", context)

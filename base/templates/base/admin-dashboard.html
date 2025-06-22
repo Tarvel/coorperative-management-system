@@ -1,76 +1,75 @@
-{% extends "layout.html" %}
-
+{% extends 'layout.html' %}
 
 {% block title %}
-    Admin Dashboard
-{% endblock title %}
-
-
-{% block content %}
-    
-        <!-- Header -->
-        <header class="bg-white shadow rounded-lg p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-            <p class="text-gray-600">Overview of cooperative operations.</p>
-        </header>
-
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800">Total Members</h3>
-                <p class="text-2xl font-bold text-gray-600">{{ members.count }}</p>
-            </div>
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800">Total Savings</h3>
-                <p class="text-2xl font-bold text-gray-600">${{ total_savings }}</p>
-            </div>
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800">Total Loans Outstanding</h3>
-                <p class="text-2xl font-bold text-gray-600">${{ total_loans_outstanding|floatformat:2 }}</p>
-            </div>
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800">Total Dividends Paid</h3>
-                <p class="text-2xl font-bold text-gray-600">${{ total_dividends|floatformat:2 }}</p>
-            </div>
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800">Pending Transactions</h3>
-                
-                {% if pending_transactions %}
-                <p class="text-2xl font-bold text-gray-600">{{ pending_transactions }}</p>
-
-                {% else %}
-                <p class="text-gray-500">No recent transactions</p>
-                    
-                {% endif %}
- 
-            </div>
-            
-            <div class="bg-white shadow rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-800">Pending Loan Applications</h3>
-
-                {% if pending_loans %}
-                <p class="text-2xl font-bold text-gray-600">{{ pending_loans }}</p>
-
-                {% else %}
-                <p class="text-gray-500">No pending loan application</p>
-                    
-                {% endif %}
-            </div>
-        </div>
-
-         <!-- Navigation Links -->
-        <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Admin Actions</h2>
-            <ul class="space-y-2">
-                <li><a href="{% url 'admin_management' %}" class="text-blue-600 hover:underline">Member Management</a></li>
-                {% comment %} 
-                <li><a href="{% url 'admin_transaction_management' %}" class="text-blue-600 hover:underline">Transaction Approval</a></li>
-                <li><a href="{% url 'admin_loan_management' %}" class="text-blue-600 hover:underline">Loan Approval</a></li>
-                <li><a href="{% url 'admin_dividend_management' %}" class="text-blue-600 hover:underline">Dividend Management</a></li>
-                <li><a href="{% url 'cooperative_report' %}" class="text-blue-600 hover:underline">Cooperative Report</a></li> {% endcomment %}
-            </ul>
-        </div>
-
-       
+  Admin Dashboard
 {% endblock %}
 
+{% block content %}
+  <!-- Header -->
+  <header class="bg-white shadow rounded-lg p-6 mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+    <p class="text-gray-600">Overview of cooperative operations.</p>
+  </header>
+
+  <!-- Summary Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800">Total Members</h3>
+      <p class="text-2xl font-bold text-gray-600">{{ members.count }}</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800">Total Savings</h3>
+      <p class="text-2xl font-bold text-gray-600">${{ total_savings }}</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800">Total Loans Outstanding</h3>
+      <p class="text-2xl font-bold text-gray-600">${{ total_loans_outstanding|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800">Total Dividends Paid</h3>
+      <p class="text-2xl font-bold text-gray-600">${{ total_dividends|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800">Pending Transactions</h3>
+
+      {% if pending_transactions %}
+        <p class="text-2xl font-bold text-gray-600">{{ pending_transactions }}</p>
+      {% else %}
+        <p class="text-gray-500">No recent transactions</p>
+      {% endif %}
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800">Pending Loan Applications</h3>
+
+      {% if pending_loans %}
+        <p class="text-2xl font-bold text-gray-600">{{ pending_loans }}</p>
+      {% else %}
+        <p class="text-gray-500">No pending loan application</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Navigation Links -->
+  <div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Admin Actions</h2>
+    <ul class="space-y-2">
+      <li>
+        <a href="{% url 'admin_management' %}" class="text-blue-600 hover:underline">Member Management</a>
+      </li>
+      
+      <li>
+        <a href="{% url 'admin_transaction_management' %}" class="text-blue-600 hover:underline">Transaction Approval</a>
+      </li>{% comment %}
+      <li>
+        <a href="{% url 'admin_loan_management' %}" class="text-blue-600 hover:underline">Loan Approval</a>
+      </li>
+      <li>
+        <a href="{% url 'admin_dividend_management' %}" class="text-blue-600 hover:underline">Dividend Management</a>
+      </li> {% endcomment %}
+      <li>
+        <a href="{% url 'cooperative_report' %}" class="text-blue-600 hover:underline">Cooperative Report</a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}
